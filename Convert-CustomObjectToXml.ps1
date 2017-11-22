@@ -49,12 +49,12 @@ Modified to include working with Object arrays
 	if ($isRoot) {
 		"<{0}>" -f $rootEl
 	}
-	# Iterate through all of the note properties in the object.
-	if ( $object -is [array] ) {
-		ForEach ( $item in $object ) {
-			foreach ($prop in (Get-Member -InputObject $item -MemberType NoteProperty)) {
-				$child = $item.($prop.Name)
-		 
+	ForEach ( $item in $object ) {
+		# Iterate through all of the note properties in the object.
+		foreach ($prop in (Get-Member -InputObject $item -MemberType NoteProperty)) {
+			$children = $item.($prop.Name)
+			foreach ($child in $children) {
+				#write-host "child type is $($child.gettype())"
 				# Check if the property is an object and we want to dig into it
 				if ($child.GetType().Name -eq "PSCustomObject" -and $depth -gt 1) {
 					"{0}<{1}>" -f ($indentString * $indent), $prop.Name
@@ -64,26 +64,10 @@ Modified to include working with Object arrays
 				else {
 					# output the element or elements in the case of an array
 					foreach ($element in $child) {
+						#write-host "value is $($prop.Name)"
+						#write-host "type is $($element.gettype())"
 						"{0}<{1}>{2}</{1}>" -f ($indentString * $indent), $prop.Name, $element
 					}
-				}
-			}
-		}
-	}
-	else {
-		foreach ($prop in (Get-Member -InputObject $object -MemberType NoteProperty)) {
-			$child = $object.($prop.Name)
-	 
-			# Check if the property is an object and we want to dig into it
-			if ($child.GetType().Name -eq "PSCustomObject" -and $depth -gt 1) {
-				"{0}<{1}>" -f ($indentString * $indent), $prop.Name
-					Convert-CustomObjectToXml $child -isRoot:$false -indent ($indent + 1) -depth ($depth - 1) -indentString $indentString
-				"{0}</{1}>" -f ($indentString * $indent), $prop.Name
-			}
-			else {
-				# output the element or elements in the case of an array
-				foreach ($element in $child) {
-					"{0}<{1}>{2}</{1}>" -f ($indentString * $indent), $prop.Name, $element
 				}
 			}
 		}
