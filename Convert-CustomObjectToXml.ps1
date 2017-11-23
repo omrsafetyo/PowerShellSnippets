@@ -30,51 +30,66 @@ nested PSObjects up to the depth specified will be searched. All other
 note properties will be ouput using their strings values.
  
 The output consists of node with property names and text nodes containing the
-proprty value.
+property value.
 
 Original Author: http://wannemacher.us/?p=430
-Modified to include working with Object arrays
+Modified to include working with Object arrays, and now outputs XML instead of strings.
  
 #>
+	[CmdletBinding()]
 	param (
 		[PSCustomObject]$object,
 		[Int32]$depth = 1,
 		[String]$rootEl = "root",
 		[String]$indentString = "  ",
 		[Int32]$indent = 1,
-		[switch]$isRoot = $true
+		[switch]$isRoot = $true,
+		[String]$XmlVersion = "1.0",
+		[String]$Encoding = "UTF-8"
 	)
- 
-	# Output the root element opening tag
-	if ($isRoot) {
-		"<{0}>" -f $rootEl
+	BEGIN {
+		$XmlString = ""
 	}
-	ForEach ( $item in $object ) {
-		# Iterate through all of the note properties in the object.
-		foreach ($prop in (Get-Member -InputObject $item -MemberType NoteProperty)) {
-			$children = $item.($prop.Name)
-			foreach ($child in $children) {
-				#write-host "child type is $($child.gettype())"
-				# Check if the property is an object and we want to dig into it
-				if ($child.GetType().Name -eq "PSCustomObject" -and $depth -gt 1) {
-					"{0}<{1}>" -f ($indentString * $indent), $prop.Name
-						Convert-CustomObjectToXml $child -isRoot:$false -indent ($indent + 1) -depth ($depth - 1) -indentString $indentString
-					"{0}</{1}>" -f ($indentString * $indent), $prop.Name
-				}
-				else {
-					# output the element or elements in the case of an array
-					foreach ($element in $child) {
-						#write-host "value is $($prop.Name)"
-						#write-host "type is $($element.gettype())"
-						"{0}<{1}>{2}</{1}>" -f ($indentString * $indent), $prop.Name, $element
+	
+	PROCESS {
+		# Output the root element opening tag
+		if ($isRoot) {
+			$XmlString += "<{0}>" -f $rootEl
+		}
+		
+		ForEach ( $item in $object ) {
+			# Iterate through all of the note properties in the object.
+			foreach ($prop in (Get-Member -InputObject $item -MemberType NoteProperty)) {
+				$children = $item.($prop.Name)
+				foreach ($child in $children) {
+					# Check if the property is an object and we want to dig into it
+					if ($child.GetType().Name -eq "PSCustomObject" -and $depth -gt 1) {
+						$XmlString += "{0}<{1}>" -f ($indentString * $indent), $prop.Name
+						$XmlString += (Convert-CustomObjectToXml $child -isRoot:$false -indent ($indent + 1) -depth ($depth - 1) -indentString $indentString)
+						$XmlString += "{0}</{1}>" -f ($indentString * $indent), $prop.Name
+					}
+					else {
+						# output the element or elements in the case of an array
+						foreach ($element in $child) {
+							$XmlString += "{0}<{1}>{2}</{1}>" -f ($indentString * $indent), $prop.Name, $element
+						}
 					}
 				}
 			}
 		}
+	 
+		# If this is the root, close the root element and convert it to Xml and output
+		if ($isRoot) {
+			$XmlString += "</{0}>" -f $rootEl
+			[xml]$Output = $XmlString
+			$xmlDeclaration = $Output.CreateXmlDeclaration($XmlVersion,$Encoding,$null)
+			[void]$Output.InsertBefore($xmlDeclaration, $Output.DocumentElement)
+			$Output
+		}
+		else {
+			# If this is the not the root, this has been called recursively, output the string
+			Write-Output $XmlString
+		}
 	}
- 
-	# Output the root element closing tag
-	if ($isRoot) {
-		"</{0}>" -f $rootEl
-	}
+	END {}
 }
