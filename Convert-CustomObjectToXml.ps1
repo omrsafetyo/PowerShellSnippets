@@ -48,13 +48,13 @@ Modified to include working with Object arrays, and now outputs XML instead of s
 		[String]$Encoding = "UTF-8"
 	)
 	BEGIN {
-		$XmlString = ""
+		$sb = [System.Text.StringBuilder]::new()
 	}
 	
 	PROCESS {
 		# Output the root element opening tag
 		if ($isRoot) {
-			$XmlString += "<{0}>" -f $rootEl
+			[void]$sb.AppendLine(("<{0}>" -f $rootEl))
 		}
 		
 		ForEach ( $item in $object ) {
@@ -64,14 +64,14 @@ Modified to include working with Object arrays, and now outputs XML instead of s
 				foreach ($child in $children) {
 					# Check if the property is an object and we want to dig into it
 					if ($child.GetType().Name -eq "PSCustomObject" -and $depth -gt 1) {
-						$XmlString += "{0}<{1}>" -f ($indentString * $indent), $prop.Name
-						$XmlString += (Convert-CustomObjectToXml $child -isRoot:$false -indent ($indent + 1) -depth ($depth - 1) -indentString $indentString)
-						$XmlString += "{0}</{1}>" -f ($indentString * $indent), $prop.Name
+						[void]$sb.AppendLine(("{0}<{1}>" -f ($indentString * $indent), $prop.Name))
+						Convert-CustomObjectToXml $child -isRoot:$false -indent ($indent + 1) -depth ($depth - 1) -indentString $indentString | ForEach-Object { [void]$sb.AppendLine($_) }
+						[void]$sb.AppendLine(("{0}</{1}>" -f ($indentString * $indent), $prop.Name))
 					}
 					else {
 						# output the element or elements in the case of an array
 						foreach ($element in $child) {
-							$XmlString += "{0}<{1}>{2}</{1}>" -f ($indentString * $indent), $prop.Name, $element
+							[void]$sb.AppendLine(("{0}<{1}>{2}</{1}>" -f ($indentString * $indent), $prop.Name, $element))
 						}
 					}
 				}
@@ -80,15 +80,15 @@ Modified to include working with Object arrays, and now outputs XML instead of s
 	 
 		# If this is the root, close the root element and convert it to Xml and output
 		if ($isRoot) {
-			$XmlString += "</{0}>" -f $rootEl
-			[xml]$Output = $XmlString
+			[void]$sb.AppendLine(("</{0}>" -f $rootEl))
+			[xml]$Output = $sb.ToString()
 			$xmlDeclaration = $Output.CreateXmlDeclaration($XmlVersion,$Encoding,$null)
 			[void]$Output.InsertBefore($xmlDeclaration, $Output.DocumentElement)
 			$Output
 		}
 		else {
 			# If this is the not the root, this has been called recursively, output the string
-			Write-Output $XmlString
+			Write-Output $sb.ToString()
 		}
 	}
 	END {}
