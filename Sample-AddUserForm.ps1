@@ -123,7 +123,7 @@ Function UserCreate-AddGroup
 			{
 				$sam = ($FirstName.Substring(0,2) + $LastName.Substring(0,6)).ToLower()
 				# This won't work
-				UserCreate -SamAccountName $sam -FirstName $FirstName -LastName
+				UserCreate -SamAccountName $sam -FirstName $FirstName -LastName $LastName
 				Write-Host "$FirstName;$LastName;$sam Created" -ForegroundColor Green
 				$out = "$FirstName;$LastName;$sam"
 			}  
@@ -134,7 +134,7 @@ Function UserCreate-AddGroup
 				$Out = ";"
 				$Out| out-file '.\Chargercreated.txt' -append
 			   
-				write-host "Username Creation Error for $txtFirstName $txtLastName " + $error[0].Exception.Message.toString() -ForegroundColor Red
+				write-host "Username Creation Error for $FirstName $LastName " + $error[0].Exception.Message.toString() -ForegroundColor Red
 			}
 		}
 		
