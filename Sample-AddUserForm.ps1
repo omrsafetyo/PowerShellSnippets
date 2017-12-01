@@ -76,24 +76,43 @@ Function UserCreate-AddGroup
 
     Function UserCreate
     {
+		param(
+			$SamAccountName,
+			$FirstName,
+			$LastName
+		)
+		
+		if ( [string]::isNullOrEmpty($FirstName) ) {
+			$FirstName = $txtFirstName.Text
+		}
+		
+		if ( [string]::isNullOrEmpty($LastName) ) {
+			$LastName = $txtLastName.Text
+		}
+		
 		$dc = "corp-cli-dc2.client.ext"
 		$desc = "CompanyXYZ"
 		$path = "OU=Users,OU=External Objects,DC=client,DC=ext"
 		$groups = "FormLockdownApp"
 		 
 		$random = Get-Random -Maximum 9999 -Minimum 1000
-		$password = $txtFirstName.Text.substring(0,1).ToUpper() + $txtLastName.Text.substring(0,1).ToUpper() + "Form" + $random | ConvertTo-SecureString -AsPlainText -Force
-		$DisplayName = $txtFirstName.Text + ' ' + $txtLastName.Text
+		$password = $FirstName.substring(0,1).ToUpper() + $LastName.substring(0,1).ToUpper() + "Form" + $random | ConvertTo-SecureString -AsPlainText -Force
+		$DisplayName = $FirstName + ' ' + $LastName
 		 
 		#Checks Last name length for Username. If Username would be more than 8 characters it trims the last name for the Username
-		$txtLastNameLocal = ($txtLastName.Text.Substring(0,1).toupper() + $txtLastName.Text.Substring(1).tolower())
-		If($txtLastNameLocal.Length -gt "7")
-		{
-			$sam = ($txtFirstName.Text.Substring(0,2) + $txtLastName.Text.Substring(0,6)).ToLower()
-		}
-		Else
-		{
-			$sam = ($txtFirstName.Text.Substring(0,1) + $txtLastName.Text).ToLower()
+		$txtLastNameLocal = ($LastName.Substring(0,1).toupper() + $LastName.Substring(1).tolower())
+		
+		if ( -Not([string]::isNullOrEmpty($SamAccountName)) ) {
+			$sam = $SamAccountName
+		} else {
+			If($txtLastNameLocal.Length -gt "7")
+			{
+				$sam = ($FirstName.Substring(0,2) + $LastName.Substring(0,6)).ToLower()
+			}
+			Else
+			{
+				$sam = ($FirstName.Substring(0,1) + $LastName).ToLower()
+			}
 		}
 	 
 		#Checks if username exist. If it does it creates a new Username
@@ -102,14 +121,12 @@ Function UserCreate-AddGroup
 		{
 			Try
 			{
-				$sam = ($txtFirstName.Text.Substring(0,2) + $txtLastName.Text.Substring(0,6)).ToLower()
+				$sam = ($FirstName.Substring(0,2) + $LastName.Substring(0,6)).ToLower()
 				# This won't work
-				CreateUser $sam $txtFirstName
-				Write-Host "$txtFirstName;$txtLastName;$sam Created" -ForegroundColor Green
-				$out = "$txtFirstName;$txtLastName;$sam"
-		   
-			}
-		   
+				UserCreate -SamAccountName $sam -FirstName $FirstName -LastName
+				Write-Host "$FirstName;$LastName;$sam Created" -ForegroundColor Green
+				$out = "$FirstName;$LastName;$sam"
+			}  
 			Catch
 			{
 				$out = "user $Sam " + $error[0].Exception.Message.toString()
@@ -149,8 +166,8 @@ $txtFirstName.Add_TextChanged({ #Checks wheter First name and Last name is fille
 })
  
 $LastName.Add_TextChanged({ #Checks wheter First name and Last name is filled, and populates the initials field
-	if(($txtLFirstName.text.Length -ge 1) -and ($txtLLastName.text.length -ge 1)){
-		$Initials.text = $txtLFirstName.text.substring(0,1) + $txtLLastName.text.substring(0,1)
+	if(($txtFirstName.text.Length -ge 1) -and ($txtLastName.text.length -ge 1)){
+		$Initials.text = $txtFirstName.text.substring(0,1) + $txtLastName.text.substring(0,1)
 	}
 })
  
