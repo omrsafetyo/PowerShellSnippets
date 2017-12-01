@@ -55,93 +55,104 @@ $Exit.Height = 30
 $Exit.location = new-object system.drawing.point(147,145)
 $Exit.Font = "Consolas,10"
 $Form.controls.Add($Exit)
- 
-$params = @{'SamAccountName' = $sam.Text;
-            'DisplayName' = $DisplayName;
-            'GivenName' = $txtFirstName.Text;
-            'Path' = $path;
-            'SurName' = $txtLastName.Text;
-            'ChangePasswordAtLogon' = $false;
-            'Enabled' = $true;
-            'UserPrincipalName' = ($sam + ".client.ext");
-            'AccountPassword' = $password;
-            'Description' = $desc.Description;
-            }
- 
+  
 #Single Function Combined
 Function UserCreate-AddGroup
 {
+	$params = @{
+	        'SamAccountName' = ""
+            'DisplayName' = ""
+            'GivenName' = $txtFirstName.Text
+            'Path' = ""
+            'SurName' = $txtLastName.Text
+            'ChangePasswordAtLogon' = $false
+            'Enabled' = $true
+            'UserPrincipalName' = ""
+            'AccountPassword' = ""
+            'Description' = ""
+			'Name' = ""
+	}
+	write-host "hello world"
+
     Function UserCreate
     {
-$dc = "corp-cli-dc2.client.ext"
-$desc = "CompanyXYZ"
-$path = "OU=Users,OU=External Objects,DC=client,DC=ext"
- 
-$groups = "FormLockdownApp"
- 
-$random = Get-Random -Maximum 9999 -Minimum 1000
-$password = $txtFirstName.substring(0,1).ToUpper() + $txtLastName.substring(0,1).ToUpper() + "Form" + $random | ConvertTo-SecureString -AsPlainText -Force
-$DisplayName = $txtFirstName.Text + ' ' + $txtLastName.Text
- 
-$txtFirstName.Add_TextChanged({ #Checks wheter First name and Last name is filled, and populates the initials field
-    if(($txtFirstName.text.Length -ge 1) -and ($txtLastName.text.length -ge 1)){
-        $Initials.text = $txtFirstName.text.substring(0,1) + $txtLastName.text.substring(0,1)
-    }
-})
- 
-$LastName.Add_TextChanged({ #Checks wheter First name and Last name is filled, and populates the initials field
-    if(($txtLFirstName.text.Length -ge 1) -and ($txtLLastName.text.length -ge 1)){
-        $Initials.text = $txtLFirstName.text.substring(0,1) + $txtLLastName.text.substring(0,1)
-    }
-})
- 
-#Checks Last name length for Username. If Username would be more than 8 characters it trims the last name for the Username
-$txtLastName= ($txtLastName.Substring(0,1).toupper() + $txtLastName.Substring(1).tolower())
-    If($txtLastName.Length -gt "7")
-    {
-        $sam = ($txtFirstName.Substring(0,2) + $txtLastName.Substring(0,6)).ToLower()
-    }
-    Else
-    {
-        $sam = ($txtFirstName.Substring(0,1) + $txtLastName).ToLower()
-    }
- 
-    #Checks if username exist. If it does it creates a new Username
-    $UserCheck = Get-ADUser -Filter {sAMaccountName -eq $sam} -ErrorAction 'SilentlyContinue'
-    If($UserCheck)
-    {
-        Try
-        {
-            $sam = ($txtFirstName.Substring(0,2) + $txtLastName.Substring(0,6)).ToLower()
-            CreateUser $sam $txtFirstName
-            Write-Host "$FirstName;$LastName;$sam Created" -ForegroundColor Green
-            $out = "$FirstName;$LastName;$sam"
-       
-        }
-       
-    Catch
-        {
-            $out = "user $Sam " + $error[0].Exception.Message.toString()
-            $out | Out-File ".\Error.log" -append
-            $Out = ";"
-            $Out| out-file '.\Chargercreated.txt' -append
-           
-            write-host "Username Creation Error for $FirstName $lastName " + $error[0].Exception.Message.toString() -ForegroundColor Red
-}
-}
-   
-       New-ADUser $params
+		$dc = "corp-cli-dc2.client.ext"
+		$desc = "CompanyXYZ"
+		$path = "OU=Users,OU=External Objects,DC=client,DC=ext"
+		$groups = "FormLockdownApp"
+		 
+		$random = Get-Random -Maximum 9999 -Minimum 1000
+		$password = $txtFirstName.Text.substring(0,1).ToUpper() + $txtLastName.Text.substring(0,1).ToUpper() + "Form" + $random | ConvertTo-SecureString -AsPlainText -Force
+		$DisplayName = $txtFirstName.Text + ' ' + $txtLastName.Text
+		 
+		#Checks Last name length for Username. If Username would be more than 8 characters it trims the last name for the Username
+		$txtLastNameLocal = ($txtLastName.Text.Substring(0,1).toupper() + $txtLastName.Text.Substring(1).tolower())
+		If($txtLastNameLocal.Length -gt "7")
+		{
+			$sam = ($txtFirstName.Text.Substring(0,2) + $txtLastName.Text.Substring(0,6)).ToLower()
+		}
+		Else
+		{
+			$sam = ($txtFirstName.Text.Substring(0,1) + $txtLastName.Text).ToLower()
+		}
+	 
+		#Checks if username exist. If it does it creates a new Username
+		$UserCheck = Get-ADUser -Filter {sAMaccountName -eq $sam} -ErrorAction 'SilentlyContinue'
+		If($UserCheck)
+		{
+			Try
+			{
+				$sam = ($txtFirstName.Text.Substring(0,2) + $txtLastName.Text.Substring(0,6)).ToLower()
+				# This won't work
+				CreateUser $sam $txtFirstName
+				Write-Host "$txtFirstName;$txtLastName;$sam Created" -ForegroundColor Green
+				$out = "$txtFirstName;$txtLastName;$sam"
+		   
+			}
+		   
+			Catch
+			{
+				$out = "user $Sam " + $error[0].Exception.Message.toString()
+				$out | Out-File ".\Error.log" -append
+				$Out = ";"
+				$Out| out-file '.\Chargercreated.txt' -append
+			   
+				write-host "Username Creation Error for $txtFirstName $txtLastName " + $error[0].Exception.Message.toString() -ForegroundColor Red
+			}
+		}
+		
+		$params.Name = $sam
+		$params.SamAccountName = $sam
+		$params.UserPrincipalName = $("{0}.client.ext" -f $sam)
+		$params.DisplayName = $DisplayName
+		$params.Path = $path
+		$params.Description = $desc
+		$params.AccountPassword = (ConvertTo-SecureString -AsPlainText $password -Force)
+		New-ADUser @params -whatif
     }
  
     Function Add-Group
     {
-       Add-ADPrincipalGroupMembership -Identity $sam -server $dc -MemberOf $groups -confirm:$false
+       Add-ADPrincipalGroupMembership -Identity $params.SamAccountName -server $dc -MemberOf $groups -confirm:$false
     }
+	UserCreate
 }
 function do_exit
 {
-     $Exit.close()
+     $Form.close()
 }
+
+$txtFirstName.Add_TextChanged({ #Checks wheter First name and Last name is filled, and populates the initials field
+	if(($txtFirstName.text.Length -ge 1) -and ($txtLastName.text.length -ge 1)){
+		$Initials.text = $txtFirstName.text.substring(0,1) + $txtLastName.text.substring(0,1)
+	}
+})
+ 
+$LastName.Add_TextChanged({ #Checks wheter First name and Last name is filled, and populates the initials field
+	if(($txtLFirstName.text.Length -ge 1) -and ($txtLLastName.text.length -ge 1)){
+		$Initials.text = $txtLFirstName.text.substring(0,1) + $txtLLastName.text.substring(0,1)
+	}
+})
  
 $UserCreate.add_click({UserCreate-AddGroup})
 $UserCreate.location = new-object system.drawing.point(7,145)
