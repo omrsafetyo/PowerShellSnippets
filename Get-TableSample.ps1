@@ -36,7 +36,7 @@ BEGIN {
 
 PROCESS {
     $WhereArray = @()
-    if ($Patterns -ne $null) {
+    if ($PSBoundParameters.ContainsKey("Patterns") ) {
         ForEach ( $Pattern in $Patterns ) {
             $WhereArray += '$_.Name -like "{0}"' -f $Pattern
         }
@@ -45,25 +45,28 @@ PROCESS {
         $WhereArray = @($WhereString)
     }
 
-    if ( $Table -ne $null ) {
+    if ( $PSBoundParameters.ContainsKey("Table") ) {
         $WhereArray += '($Table -contains $_.Name)'
     }
 
-    if ( $Schema -ne $null ) {
+    if ( $PSBoundParameters.ContainsKey("Schema") ) {
         $WhereArray += '($Schema -contains $_.Schema)'
     }
     
-    if ( $WhereString.Count -gt 0 ) {
+    if ( $WhereArray.Count -gt 0 ) {
         $WhereString = $WhereArray -Join " -or "
         $WhereBlock = [scriptblock]::Create($WhereString)
+        Write-Verbose $WhereString
         
         $Tables = $sqlServer.Databases[$Database].Tables | Where-Object -FilterScript $WhereBlock
     }
     else {
+        Write-Verbose "All tables"
         $Tables = $sqlServer.Databases[$Database].Tables
     }
     
     ForEach ( $sqlTable in $Tables ) {
+        Write-Verbose $sqlTable.Name
         $ReportTable = New-Object System.Collections.ArrayList
         $Order = 1 # Assuming the Column order in the Columns property is the same as the ordinal position of the column in INFORMATION_SCHEMA(COLUMNS) 
         ForEach ( $Column in $sqlTable.Columns ) {
@@ -80,7 +83,6 @@ PROCESS {
         }
         
         $TSQL = 'SELECT TOP {0} {1} FROM {2}' -f $SampleSize, ($ReportTable.Field -Join ","), $sqlTable.Name
-        $TSQL
         $SampleRows = $SqlServer.Databases[$Database].ExecuteWithResults($TSQL).Tables[0].Rows
         
         ForEach ($CustomObject in $ReportTable) {
