@@ -31,10 +31,10 @@ PROCESS {
 	}
 	
 	$Command = Get-Command @ParamHash
-	$ModuleName = $Command.ModuleName
-	if ( $null -eq $Command ) {
+	if ( [string]::IsNullOrEmpty($Command) ) {
 		exit
 	}
+	$ModuleName = $Command.ModuleName
 	
 	$Parameters = $Command.Parameters
 	$DefaultParameterSet = $Command.DefaultParameterSet
