@@ -106,7 +106,7 @@ BEGIN {
                 if ( $null -eq $BaseDir ) { continue }  # PSv2 always enters into the loop even if the loop item is null, so it will process 1 null entry.
                 New-RunSpace -BaseDir $BaseDir
                 
-                [array]$SubDirectories  = (cmd /r dir $BaseDir /b /a:D) | ForEach-Object { "{0}\{1}" -f $BaseDir,$_ }
+                [array]$SubDirectories  = ((Get-ChildItem $BaseDir -Directory).Name) | ForEach-Object { "{0}\{1}" -f $BaseDir,$_ }
                 ForEach ( $SubDir in $SubDirectories ) {
                     if ( $null -eq $SubDir ) { continue }  # PSv2 always enters into the loop even if the loop item is null, so it will process 1 null entry.
                     New-RunSpace -BaseDir $SubDir -Recurse
