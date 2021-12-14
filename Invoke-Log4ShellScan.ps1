@@ -75,7 +75,7 @@ BEGIN {
             }
             
             # Save a reference to the thread, with meta data
-            [void]$Global:Jobs.Add((
+            [void]$Global:JobThreads.Add((
                 New-Object -Type PSCustomObject -Property @{
                     PowerShell  = $PowerShell
                     AsyncResult = $PowerShell.BeginInvoke()
@@ -85,7 +85,7 @@ BEGIN {
         } # Function New-Runspace
 
         $AllFiles = [System.Collections.ArrayList]@()
-        $Global:Jobs = [System.Collections.ArrayList]@()
+        $Global:JobThreads = [System.Collections.ArrayList]@()
 
         # Set up runspace factory
         $MAX_THREADS          = [int]$ENV:NUMBER_OF_PROCESSORS + 1
@@ -106,7 +106,7 @@ BEGIN {
                 if ( $null -eq $BaseDir ) { continue }  # PSv2 always enters into the loop even if the loop item is null, so it will process 1 null entry.
                 New-RunSpace -BaseDir $BaseDir
                 
-                [array]$SubDirectories  = ((Get-ChildItem $BaseDir -Directory).Name) | ForEach-Object { "{0}\{1}" -f $BaseDir,$_ }
+                [array]$SubDirectories  = Get-ChildItem $BaseDir -Directory -Force -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
                 ForEach ( $SubDir in $SubDirectories ) {
                     if ( $null -eq $SubDir ) { continue }  # PSv2 always enters into the loop even if the loop item is null, so it will process 1 null entry.
                     New-RunSpace -BaseDir $SubDir -Recurse
@@ -115,9 +115,9 @@ BEGIN {
         } # ForEach ( $DriveLetter in $DriveLetters )
 
         # Wait for each thread to complete
-        ForEach ( $job in $Jobs ) {
+        ForEach ( $job in Global:JobThreads ) {
             $currentBaseDir = $job.BaseDir
-            # Write-Host "Waiting for $currentBaseDir"
+            Write-Verbose "Waiting for $currentBaseDir"
 
             [void]$job.AsyncResult.AsyncWaitHandle.WaitOne()
             $Data = $job.PowerShell.EndInvoke($job.AsyncResult)
@@ -195,7 +195,7 @@ PROCESS {
         }
     }
     else {
-        Invoke-Command -ScriptBlock $ScriptBlock
+        Invoke-Command -ScriptBlock $ScriptBlock | Export-Csv -NoTypeInformation $OutputFile -Append
     }
 }
 END {}
