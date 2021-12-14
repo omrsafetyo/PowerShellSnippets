@@ -115,7 +115,7 @@ BEGIN {
         } # ForEach ( $DriveLetter in $DriveLetters )
 
         # Wait for each thread to complete
-        ForEach ( $job in Global:JobThreads ) {
+        ForEach ( $job in $Global:JobThreads ) {
             $currentBaseDir = $job.BaseDir
             Write-Verbose "Waiting for $currentBaseDir"
 
