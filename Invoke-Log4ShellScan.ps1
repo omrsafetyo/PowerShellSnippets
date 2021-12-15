@@ -45,7 +45,7 @@ BEGIN {
                                 
                             } # files
                             else {
-                                Get-ChildItem $Path  -force -include *.jar -ErrorAction SilentlyContinue | ForEach-Object {
+                                Get-ChildItem (Join-Path $Path "*.jar") -force -ErrorAction SilentlyContinue | ForEach-Object {
                                     if (select-string "JndiLookup.class" $_.FullName) {
                                         $_ | Select-Object -Property @{N="Computername";E={$ENV:COMPUTERNAME}}, Name, FullName
                                     }
