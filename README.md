@@ -4,7 +4,7 @@ This is just a collection of sample scripts written, or improved, typically in a
 
 ## For those here for the Log4j scanner.
 
-NOTE:  There is a second erlease of this script which just goes against hashes of known vulnerable files from the log4j package.  That copy is here:  https://github.com/omrsafetyo/PowerShellSnippets/blob/master/Invoke-Log4ShellScanFromHash.ps1
+NOTE:  There is a second release of this script which just goes against hashes of known vulnerable files from the log4j package.  That copy is here:  https://github.com/omrsafetyo/PowerShellSnippets/blob/master/Invoke-Log4ShellScanFromHash.ps1
 
 This tool is a script that expands on the s one-liner provided here: https://www.reddit.com/r/blueteamsec/comments/rd38z9/log4j_0day_being_exploited/
 
