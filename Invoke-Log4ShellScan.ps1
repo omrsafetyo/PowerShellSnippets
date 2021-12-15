@@ -174,9 +174,9 @@ PROCESS {
             $Jobs | Wait-Job -Timeout $timeout | Out-Null
             
             # for each job that did not return results back, log those items
-            ForEach ($item in $Computername.Where({$Jobs.Name -notcontains $_})) {
-                Write-Host "Did not retrieve results for $item" -ForegroundColor Red
-            }
+            #ForEach ($item in $Computername.Where({$Jobs.Name -notcontains $_})) {
+            #    Write-Host "Did not retrieve results for $item" -ForegroundColor Red
+            #}
         
             # receive the results from the remaining, successful jobs
             ForEach ( $job in $Jobs.Where({$_.State -eq "Completed"}) ) {
