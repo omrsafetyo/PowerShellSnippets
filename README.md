@@ -6,6 +6,13 @@ This is just a collection of sample scripts written, or improved, typically in a
 
 NOTE:  There is a second release of this script which just goes against hashes of known vulnerable files from the log4j package.  That copy is here:  https://github.com/omrsafetyo/PowerShellSnippets/blob/master/Invoke-Log4ShellScanFromHash.ps1
 
+Update: Another author has provided a temporary workaround script that removes references to JndiLookup.class from .jar files:
+https://www.reddit.com/r/PowerShell/comments/rgmi88/in_case_anyone_needs_it_heres_a_quick_and_dirty/
+https://gist.github.com/neoKushan/e156810fc91765aa84857314b92bb22d
+
+
+
+
 This tool is a script that expands on the s one-liner provided here: https://www.reddit.com/r/blueteamsec/comments/rd38z9/log4j_0day_being_exploited/
 
 The one liner would search the C: drive for any .jar files, and search for references to the class JndiLookup.class.  This script does the same thing, but parallelized across systems, and multi-threaded on a given system.  As it does this specific search, it should find potentially vulnerable log4j files, but may also give false positives (the patched version of log4j still contains this reference), as well as other files that don't necessarily use log4j directly.  As such, it can be used to find potential vulnerabilities that development teams can ensure don't have the same issues as the log4j library.
