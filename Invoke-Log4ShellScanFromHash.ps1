@@ -214,6 +214,9 @@ BEGIN {
                             if ( $Recurse -ne $False ) {
                                 [void]$gciparams.Add("Recurse",$True)
                             }
+                            else {
+                                $gciParams.Path = Join-Path $gciparams.path "*"
+                            }
 
                             Get-ChildItem @gciparams | ForEach-Object {
                                 if ( $PSVersionMajor -gt 3 ) {
